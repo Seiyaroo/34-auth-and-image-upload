@@ -10,11 +10,9 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import java.util.List;
 
-public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
+class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
     private List<Post> mPosts;
 
     @Override
@@ -25,6 +23,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     public void setPosts(List<Post> posts) {
         mPosts = posts;
     }
+
 
     @NonNull
     @Override
@@ -42,7 +41,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         postViewHolder.bind(post);
     }
 
-    public class PostViewHolder extends RecyclerView.ViewHolder() {
+    public class PostViewHolder extends RecyclerView.ViewHolder {
         public View mView;
 
         public ImageView mImage;
@@ -52,24 +51,24 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         private Post mPost;
 
         public PostViewHolder(@NonNull View itemView) {
-        super(itemView);
-        mView = itemView;
+            super(itemView);
+            mView = itemView;
 
-        mImage = mView.findViewById(R.id.photo);
-        mUsername = mView.findViewById(R.id.username);
-        mDescription = mView.findViewById(R.id.description);
+            mImage = mView.findViewById(R.id.photo);
+            mUsername = mView.findViewById(R.id.username);
+            mDescription = mView.findViewById(R.id.description);
         }
 
-    public void bind(Post post) {
-        mPost = post;
+        public void bind(Post post) {
+            mPost = post;
 
-        mUsername.setText(post.username);
-        mDescription.setText(post.description);
+            mUsername.setText(post.username);
+            mDescription.setText(post.description);
 
-        Picasso.get()
-                .load(post.imageUrl)
-                .placeholder(R.drawable.loading)
-                .into(image);
+            Picasso.get()
+                    .load(post.imageUrl)
+                    .placeholder(R.drawable.loading)
+                    .into(mImage);
         }
     }
 }
