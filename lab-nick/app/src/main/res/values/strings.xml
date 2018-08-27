@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">34-auth-and-image-upload</string>
+    <string name="email">email</string>
+    <string name="password">password</string>
+    <string name="sign_in">sign_in</string>
+    <string name="sign_in_anonymously">sign_in_anonymously</string>
+    <string name="proceed_to_feed">proceed_to_feed</string>
+    <string name="logout">logout</string>
+    <string name="post">post</string>
+    <string name="must_be_logged_in">You must be logged in to view user details.</string>
+    <string name="description">Description</string>
+</resources>
