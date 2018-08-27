@@ -33,6 +33,7 @@ public class UploadActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
+
         // immediately dispatch the take picture intent
         dispatchTakePictureIntent();
     }
@@ -52,7 +53,7 @@ public class UploadActivity extends AppCompatActivity {
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
-                        "com.example.",
+                        "com.example.a34_auth_and_image_upload",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_SAVE_PHOTO);

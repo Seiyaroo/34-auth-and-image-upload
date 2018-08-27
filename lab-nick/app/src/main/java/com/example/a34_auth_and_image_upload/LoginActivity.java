@@ -3,6 +3,7 @@ package com.example.a34_auth_and_image_upload;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,24 +20,32 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class LoginActivity {
+public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LOGIN";
 
     private FirebaseAuth mAuth;
 
     //Logged out view options
-    @BindView(R.id.email) TextView mEmail;
-    @BindView(R.id.password) TextView mPassword;
+    @BindView(R.id.email)
+    TextView mEmail;
+    @BindView(R.id.password)
+    TextView mPassword;
 
-    @BindView(R.id.signin) Button mSignin;
-    @BindView(R.id.signinAnonymously) Button mSigninAnonomously;
+    @BindView(R.id.signin)
+    Button mSignin;
+    @BindView(R.id.signinAnonymously)
+    Button mSigninAnonomously;
 
     //Logged in view options
-    @BindView(R.id.signedInAs) TextView mSignedInAs;
-    @BindView(R.id.usernameInfo) TextView mUsernameInfo;
+    @BindView(R.id.signedInAs)
+    TextView mSignedInAs;
+    @BindView(R.id.usernameInfo)
+    TextView mUsernameInfo;
 
-    @BindView(R.id.proceedToFeed) Button mProceedToFeed;
-    @BindView(R.id.logout) Button mLogout;
+    @BindView(R.id.proceedToFeed)
+    Button mProceedToFeed;
+    @BindView(R.id.logout)
+    Button mLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,12 +113,14 @@ public class LoginActivity {
                             updateUI(user);
                         } else {
                             //If signin fails, display a message to the user
-                            Log.w(TAG, "createUserWithEmail:failure", Toast.LENGTH_SHORT).show();
+
+                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                            Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
                             updateUI(null);
                         }
                     }
                 });
-            }
+    }
 
     @OnClick(R.id.signinAnonymously)
     public void anonymousSignIn() {
