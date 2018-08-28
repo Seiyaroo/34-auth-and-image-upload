@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,32 +26,18 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
 
-    //Logged out view options
-    @BindView(R.id.email)
-    TextView mEmail;
-    @BindView(R.id.password)
-    TextView mPassword;
+    @BindView(R.id.loggedInOptions) LinearLayout mLoggedInOptions;
+    @BindView(R.id.loggedOutOptions) LinearLayout mLoggedOutOptions;
 
-    @BindView(R.id.signin)
-    Button mSignin;
-    @BindView(R.id.signinAnonymously)
-    Button mSigninAnonomously;
-
-    //Logged in view options
-    @BindView(R.id.signedInAs)
-    TextView mSignedInAs;
-    @BindView(R.id.usernameInfo)
-    TextView mUsernameInfo;
-
-    @BindView(R.id.proceedToFeed)
-    Button mProceedToFeed;
-    @BindView(R.id.logout)
-    Button mLogout;
+    @BindView(R.id.usernameInfo) TextView mUsernameInfo;
+    @BindView(R.id.usernameInput) TextView mEmail;
+    @BindView(R.id.passwordInput) TextView mPassword;
+    @BindView(R.id.emailLogin) Button mEmailLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
 
         ButterKnife.bind(this);
 
@@ -60,84 +47,63 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void updateUI(FirebaseUser user) {
-        if (user != null && user.getUid() != null) {
-            if (user.getEmail() != null) {
-                mUsernameInfo.setText(user.getEmail() + " " + user.getUid());
-            } else {
-                mUsernameInfo.setText("Anonymous " + user.getUid());
-            }
-            showLogout();
+        if (user == null) {
+            mLoggedInOptions.setVisibility(View.GONE);
+            mLoggedOutOptions.setVisibility(View.VISIBLE);
         } else {
-            mUsernameInfo.setText(R.string.must_be_logged_in);
-            showLogin();
+            mLoggedInOptions.setVisibility(View.VISIBLE);
+            mLoggedOutOptions.setVisibility(View.GONE);
+
+            String info = "";
+            if (user.getEmail() != null && user.getUid() != null) {
+                info = user.getEmail() + " " + user.getUid();
+            } else if (user.getUid() != null) {
+                info = "Anonymous " + user.getUid();
+            }
+            mUsernameInfo.setText(info);
         }
     }
 
-    private void showLogin() {
-        mEmail.setVisibility(View.VISIBLE);
-        mPassword.setVisibility(View.VISIBLE);
-        mSignin.setVisibility(View.VISIBLE);
-        mSigninAnonomously.setVisibility(View.VISIBLE);
-
-        mSignedInAs.setVisibility(View.GONE);
-        mUsernameInfo.setVisibility(View.GONE);
-        mProceedToFeed.setVisibility(View.GONE);
-        mLogout.setVisibility(View.GONE);
-    }
-
-    public void showLogout() {
-        mEmail.setVisibility(View.GONE);
-        mPassword.setVisibility(View.GONE);
-        mSignin.setVisibility(View.GONE);
-        mSigninAnonomously.setVisibility(View.GONE);
-
-        mSignedInAs.setVisibility(View.VISIBLE);
-        mUsernameInfo.setVisibility(View.VISIBLE);
-        mProceedToFeed.setVisibility(View.VISIBLE);
-        mLogout.setVisibility(View.VISIBLE);
-    }
-
-    @OnClick(R.id.signin)
-    public void signin() {
-        String email = mEmail.getText().toString();
-        String password = mPassword.getText().toString();
-
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+    @OnClick(R.id.anonymousLogin)
+    public void anonymousLogIn() {
+        mAuth.signInAnonymously()
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            //Signin success, update UI with signed in Users information
-                            Log.d(TAG, "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
-                        } else {
-                            //If signin fails, display a message to the user
-
-                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                            updateUI(null);
                         }
                     }
                 });
     }
 
-    @OnClick(R.id.signinAnonymously)
-    public void anonymousSignIn() {
-        mAuth.signInAnonymously().addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+    @OnClick(R.id.emailLogin)
+    public void login() {
+        String email = mEmail.getText().toString();
+        String password = mPassword.getText().toString();
+
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
+                    Log.d(TAG, "createUserWithEmail:success");
                     FirebaseUser user = mAuth.getCurrentUser();
                     updateUI(user);
+                } else {
+                    Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                    Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                    updateUI(null);
                 }
             }
         });
     }
 
     @OnClick(R.id.proceedToFeed)
-    public void setProceedToFeed() {
+    public void ProceedToFeed() {
+        FirebaseUser user = mAuth.getCurrentUser();
         Intent intent = new Intent(this, FeedActivity.class);
+        intent.putExtra("uid", user.getUid());
         startActivity(intent);
     }
 

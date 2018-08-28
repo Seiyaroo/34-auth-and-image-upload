@@ -3,24 +3,10 @@ package com.example.a34_auth_and_image_upload;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class FeedActivity extends AppCompatActivity {
-
-    @BindView(R.id.feed) public RecyclerView recyclerView;
-    public LinearLayoutManager linearLayoutManager;
-    public PostAdapter postAdapter;
-
-    private List<Post> mPosts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,22 +14,11 @@ public class FeedActivity extends AppCompatActivity {
         setContentView(R.layout.activity_feed);
 
         ButterKnife.bind(this);
-
-        mPosts = new ArrayList<>();
-
-        linearLayoutManager = new LinearLayoutManager(this);
-        postAdapter = new PostAdapter();
-        postAdapter.setPosts(mPosts);
-
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.setAdapter(postAdapter);
     }
 
     @OnClick(R.id.post)
-    public void post() {
-        Log.d("POST", "posting");
-
-        Intent intent = new Intent(this, UploadActivity.class);
+    public void takePicture() {
+        Intent intent = new Intent(this, PhotoUploadActivity.class);
         startActivity(intent);
     }
 }
