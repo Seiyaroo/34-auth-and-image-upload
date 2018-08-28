@@ -7,10 +7,23 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.EditText;
 import android.widget.ImageView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -18,13 +31,18 @@ import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
-public class UploadActivity extends AppCompatActivity {
-    public static final int REQUEST_SAVE_PHOTO = 1;
+public class PhotoUploadActivity extends AppCompatActivity {
+    private static final int REQUEST_SAVE_PHOTO = 1;
 
-    @BindView(R.id.preview)
-    ImageView mImageView;
-    private String mCurrentPhotoPath;
+    private String mCurrentPhotoPath = null;
+    private Bitmap mBitmap = null;
+
+    @BindView(R.id.preview) ImageView mImagePreview;
+    @BindView(R.id.description) EditText mDescriptionInput;
+
+    private StorageReference mStorageRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +51,55 @@ public class UploadActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
+        mStorageRef = FirebaseStorage.getInstance().getReference();
 
-        // immediately dispatch the take picture intent
+        // Immediately go to the camera when user clicks Take Picture button
         dispatchTakePictureIntent();
+    }
+
+    @OnClick(R.id.upload)
+    public void upload() {
+        if (mBitmap == null) {
+            return;
+        }
+
+        StorageReference photoRef = mStorageRef.child("photos/" + mCurrentPhotoPath);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        photoRef.putBytes(data)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // Get a URL to the uploaded content
+                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                        PhotoUploadActivity.this.saveImageUrlToDatabase(downloadUrl);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
+                        exception.printStackTrace();
+                    }
+                });
+    }
+
+    private void saveImageUrlToDatabase(Uri storageUrl) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = user.getUid();
+        String description = mDescriptionInput.getText().toString();
+
+        // Write a message to the database
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference("photos");
+
+        DatabaseReference newPhoto = myRef.push();
+        newPhoto.child("uid").setValue(uid);
+        newPhoto.child("description").setValue(description);
+        newPhoto.child("imageUrl").setValue(storageUrl);
     }
 
     public void dispatchTakePictureIntent() {
@@ -61,21 +125,10 @@ public class UploadActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_SAVE_PHOTO && resultCode == RESULT_OK) {
             setPictureFromFile();
-            galleryAddPic();
-        }
-    }
-
-    public void setPictureFromThumbnail(Intent data)  {
-        // if the image wasn't saved to a file then a preview comes back as data in an intent
-        Bundle extras = data.getExtras();
-        if (extras != null) {
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            mImageView.setImageBitmap(imageBitmap);
         }
     }
 
@@ -97,8 +150,8 @@ public class UploadActivity extends AppCompatActivity {
 
     private void setPictureFromFile() {
         // Get the dimensions of the View
-        int targetW = mImageView.getWidth();
-        int targetH = mImageView.getHeight();
+        int targetW = mImagePreview.getWidth();
+        int targetH = mImagePreview.getHeight();
 
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -106,14 +159,6 @@ public class UploadActivity extends AppCompatActivity {
         BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
-
-        if (targetW == 0) {
-            targetW = 1;
-        }
-
-        if (targetH == 0) {
-            targetH = 1;
-        }
 
         // Determine how much to scale down the image
         int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
@@ -124,14 +169,7 @@ public class UploadActivity extends AppCompatActivity {
         bmOptions.inPurgeable = true;
 
         Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        mImageView.setImageBitmap(bitmap);
-    }
-
-    private void galleryAddPic() {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(mCurrentPhotoPath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
-        this.sendBroadcast(mediaScanIntent);
+        mImagePreview.setImageBitmap(bitmap);
+        mBitmap = bitmap;
     }
 }
